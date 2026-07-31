@@ -1,0 +1,26 @@
+# --- Python / backend ---
+.featurePulse/
+featurePulse/
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.db
+*.sqlite3
+
+# --- Data ---
+data/*.csv
+!data/.gitkeep
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- Frontend (reserved for later) ---
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# --- OS / editor ---
+.DS_Store
+.vscode/
+.idea/
