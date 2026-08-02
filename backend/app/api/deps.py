@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.security import decode_access_token
 from app.db.session import get_db
 from app.models.user import User
+from app.models.dataset import Dataset
 
 bearer_scheme = HTTPBearer()
 
@@ -28,3 +29,16 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+def get_owned_dataset(
+        dataset_id: int,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user),
+) -> Dataset:
+    """Fetches a dataset, 404ing if it doesn't exist or isn't owned by the caller."""
+    dataset = db.get(Dataset, dataset_id)
+    if dataset is None or dataset.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
+        )
+    return dataset
