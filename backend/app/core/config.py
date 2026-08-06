@@ -21,6 +21,10 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24h
 
+    AI_PROVIDER: str = "ollama"
+    OLLAMA_BASE_URL: str = "http://localhost:11434/v1"
+    OLLAMA_MODEL: str = "llama3.2"
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

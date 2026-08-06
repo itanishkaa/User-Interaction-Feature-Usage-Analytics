@@ -30,6 +30,16 @@ def get_current_user(
 
     return user
 
+def get_dataset_or_404(db: Session, dataset_id: int, current_user: User) -> Dataset:
+    """Shared ownership-check logic, usable whether dataset_id comes from a
+    path param (see get_owned_dataset below) or a request body (AI routes)."""
+    dataset = db.get(Dataset, dataset_id)
+    if dataset is None or dataset.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Dataset not found"
+        )
+    return dataset
+
 def get_owned_dataset(
         dataset_id: int,
         db: Session = Depends(get_db),
