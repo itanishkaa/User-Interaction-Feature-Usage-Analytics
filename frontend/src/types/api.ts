@@ -1,5 +1,3 @@
-// Mirrors backend/app/schemas/*.py — keep in sync with the FastAPI models.
-
 export interface User {
   id: number;
   email: string;
@@ -78,6 +76,35 @@ export interface CohortRow {
 
 export interface RetentionResponse {
   cohorts: CohortRow[];
+}
+
+export interface FeatureAdoptionRow {
+  feature: string;
+  event_count: number;
+  unique_users: number;
+  pct_of_total_events: number;
+}
+
+export interface FeatureAdoptionResponse {
+  features: FeatureAdoptionRow[];
+}
+
+export interface PlatformCount {
+  label: string;
+  count: number;
+  pct: number;
+}
+
+export interface HourlyUsage {
+  hour: number;
+  event_count: number;
+}
+
+export interface PlatformBreakdownResponse {
+  by_device: PlatformCount[];
+  by_browser: PlatformCount[];
+  by_os: PlatformCount[];
+  by_hour: HourlyUsage[];
 }
 
 export interface GenerateSummaryResponse {

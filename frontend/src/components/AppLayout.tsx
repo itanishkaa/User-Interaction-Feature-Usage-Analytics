@@ -138,7 +138,7 @@ export default function AppLayout() {
             variant="overline"
             sx={{ color: "rgba(238, 242, 240, 0.5)" }}
           >
-            v0.4 · Phase 4
+            {/* v0.4 · Phase 4 */}
           </Typography>
         </Box>
       </Drawer>

@@ -29,3 +29,27 @@ class CohortRow(BaseModel):
 
 class RetentionResponse(BaseModel):
     cohorts: list[CohortRow]
+
+class FeatureAdoptionRow(BaseModel):
+    feature: str
+    event_count: int
+    unique_users: int
+    pct_of_total_events: float
+
+class FeatureAdoptionResponse(BaseModel):
+    features: list[FeatureAdoptionRow]
+
+class PlatformCount(BaseModel):
+    label: str
+    count: int
+    pct: float
+
+class HourlyUsage(BaseModel):
+    hour: int
+    event_count: int
+
+class PlatformBreakdownResponse(BaseModel):
+    by_device: list[PlatformCount]
+    by_browser: list[PlatformCount]
+    by_os: list[PlatformCount]
+    by_hour: list[HourlyUsage]

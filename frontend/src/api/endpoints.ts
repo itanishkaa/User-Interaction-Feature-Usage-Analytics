@@ -3,10 +3,12 @@ import {
   ChatResponse,
   Dataset,
   DatasetUploadResponse,
+  FeatureAdoptionResponse,
   FunnelResponse,
   GenerateSummaryResponse,
   KPIResponse,
   PaginatedEvents,
+  PlatformBreakdownResponse,
   RetentionResponse,
   Token,
   User,
@@ -127,6 +129,28 @@ export async function getRetention(
 ): Promise<RetentionResponse> {
   const { data } = await apiClient.get<RetentionResponse>(
     `/analytics/${datasetId}/retention`,
+  );
+  return data;
+}
+
+export async function getFeatureAdoption(
+  datasetId: number,
+  topN = 10,
+): Promise<FeatureAdoptionResponse> {
+  const { data } = await apiClient.get<FeatureAdoptionResponse>(
+    `/analytics/${datasetId}/feature-adoption`,
+    {
+      params: { top_n: topN },
+    },
+  );
+  return data;
+}
+
+export async function getPlatformBreakdown(
+  datasetId: number,
+): Promise<PlatformBreakdownResponse> {
+  const { data } = await apiClient.get<PlatformBreakdownResponse>(
+    `/analytics/${datasetId}/platform-breakdown`,
   );
   return data;
 }

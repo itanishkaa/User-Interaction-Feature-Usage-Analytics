@@ -9,8 +9,11 @@ from app.schemas.analytics import (
     FunnelStep,
     KPIResponse,
     RetentionResponse,
+    PlatformBreakdownResponse,
+    FeatureAdoptionRow,
+    FeatureAdoptionResponse
 )
-from app.services.analytics import compute_funnel, compute_kpis, compute_retention
+from app.services.analytics import compute_funnel, compute_kpis, compute_retention, compute_feature_adoption, compute_platform_breakdown
 from app.services.data_loader import load_events_df
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
@@ -70,3 +73,34 @@ def get_retention(
 
     cohorts = compute_retention(df)
     return RetentionResponse(cohorts=[CohortRow(**c) for c in cohorts])
+
+@router.get("/{dataset_id}/feature-adoption", response_model=FeatureAdoptionResponse)
+def get_feature_adoption(
+    dataset: Dataset = Depends(get_owned_dataset),
+    db: Session = Depends(get_db),
+    top_n: int = Query(10, ge=1, le=50),
+):
+    df = load_events_df(db, dataset.id)
+    if df.empty:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Dataset has no events to analyze",
+        )
+
+    rows = compute_feature_adoption(df, top_n=top_n)
+    return FeatureAdoptionResponse(features=[FeatureAdoptionRow(**r) for r in rows])
+
+
+@router.get("/{dataset_id}/platform-breakdown", response_model=PlatformBreakdownResponse)
+def get_platform_breakdown(
+    dataset: Dataset = Depends(get_owned_dataset),
+    db: Session = Depends(get_db),
+):
+    df = load_events_df(db, dataset.id)
+    if df.empty:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Dataset has no events to analyze",
+        )
+
+    return PlatformBreakdownResponse(**compute_platform_breakdown(df))

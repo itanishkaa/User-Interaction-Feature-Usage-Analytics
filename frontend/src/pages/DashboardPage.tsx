@@ -1,16 +1,30 @@
-import { getApiErrorMessage } from "@/api/client";
-import { getKpis, getRetention } from "@/api/endpoints";
-import AiInsightsPanel from "@/components/AiInsightsPanel";
-import EmptyState from "@/components/EmptyState";
-import FunnelExplorer from "@/components/FunnelExplorer";
-import KpiCard from "@/components/KpiCard";
-import PulseTrace from "@/components/PulseTrace";
-import RetentionTable from "@/components/RetentionTable";
-import SectionHeader from "@/components/SectionHeader";
-import { useDatasets } from "@/contexts/DatasetContext";
-import { CohortRow, KPIResponse } from "@/types/api";
-import { Alert, Box, Card, Grid, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
+import { Alert, Box, Card, Grid, Typography } from "@mui/material";
+
+import {
+  getFeatureAdoption,
+  getKpis,
+  getPlatformBreakdown,
+  getRetention,
+} from "@/api/endpoints";
+import { getApiErrorMessage } from "@/api/client";
+import type {
+  CohortRow,
+  FeatureAdoptionRow,
+  KPIResponse,
+  PlatformBreakdownResponse,
+} from "@/types/api";
+import { useDatasets } from "@/contexts/DatasetContext";
+
+import SectionHeader from "@/components/SectionHeader";
+import KpiCard from "@/components/KpiCard";
+import EmptyState from "@/components/EmptyState";
+import PulseTrace from "@/components/PulseTrace";
+import AiInsightsPanel from "@/components/AiInsightsPanel";
+import FunnelExplorer from "@/components/FunnelExplorer";
+import RetentionTable from "@/components/RetentionTable";
+import FeatureAdoptionChart from "@/components/FeatureAdoptionChart";
+import PlatformBreakdownPanel from "@/components/PlatformBreakdownPanel";
 
 function formatSeconds(sec: number): string {
   const minutes = Math.floor(sec / 60);
@@ -27,6 +41,10 @@ export default function DashboardPage() {
 
   const [kpis, setKpis] = useState<KPIResponse | null>(null);
   const [cohorts, setCohorts] = useState<CohortRow[]>([]);
+  const [features, setFeatures] = useState<FeatureAdoptionRow[]>([]);
+  const [platform, setPlatform] = useState<PlatformBreakdownResponse | null>(
+    null,
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,6 +52,8 @@ export default function DashboardPage() {
     if (!selectedDataset) {
       setKpis(null);
       setCohorts([]);
+      setFeatures([]);
+      setPlatform(null);
       return;
     }
 
@@ -41,11 +61,18 @@ export default function DashboardPage() {
     setLoading(true);
     setError(null);
 
-    Promise.all([getKpis(selectedDataset.id), getRetention(selectedDataset.id)])
-      .then(([kpiRes, retentionRes]) => {
+    Promise.all([
+      getKpis(selectedDataset.id),
+      getRetention(selectedDataset.id),
+      getFeatureAdoption(selectedDataset.id),
+      getPlatformBreakdown(selectedDataset.id),
+    ])
+      .then(([kpiRes, retentionRes, featureRes, platformRes]) => {
         if (cancelled) return;
         setKpis(kpiRes);
         setCohorts(retentionRes.cohorts);
+        setFeatures(featureRes.features);
+        setPlatform(platformRes);
       })
       .catch((err) => {
         if (cancelled) return;
@@ -144,12 +171,14 @@ export default function DashboardPage() {
           </Grid>
         )}
       </Box>
+
       {selectedDataset && (
         <Box>
           <SectionHeader title="AI insights" />
           <AiInsightsPanel datasetId={selectedDataset.id} />
         </Box>
       )}
+
       {selectedDataset && (
         <Box>
           <SectionHeader title="Funnel" />
@@ -162,6 +191,25 @@ export default function DashboardPage() {
           </Card>
         </Box>
       )}
+
+      {selectedDataset && (
+        <Box>
+          <SectionHeader title="Feature adoption" />
+          <Card sx={{ p: 2.5 }}>
+            {!loading && <FeatureAdoptionChart features={features} />}
+          </Card>
+        </Box>
+      )}
+
+      {selectedDataset && (
+        <Box>
+          <SectionHeader title="Platform breakdown" />
+          <Card sx={{ p: 2.5 }}>
+            {!loading && platform && <PlatformBreakdownPanel data={platform} />}
+          </Card>
+        </Box>
+      )}
+
       <Box>
         <SectionHeader title="Retention cohorts" />
         <Card sx={{ p: 2.5 }}>

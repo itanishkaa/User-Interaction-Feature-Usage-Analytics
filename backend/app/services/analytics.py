@@ -140,3 +140,63 @@ def compute_retention(df: pd.DataFrame) -> list[dict]:
 
     output.sort(key=lambda r: r["cohort_week"])
     return output
+
+def compute_feature_adoption(df: pd.DataFrame, top_n: int = 10) -> list[dict]:
+    """
+    Top-used features by event volume, per PRD 4.4. Events with no
+    feature_category (nullable in the ingestion contract) are bucketed as
+    "Uncategorized" rather than dropped, so usage isn't silently undercounted.
+    """
+    total_events = len(df)
+    if total_events == 0:
+        return []
+
+    grouped = (
+        df.assign(feature=df["feature_category"].fillna("Uncategorized"))
+        .groupby("feature")
+        .agg(event_count=("event_name", "count"), unique_users=("user_id", "nunique"))
+        .reset_index()
+        .sort_values("event_count", ascending=False)
+        .head(top_n)
+    )
+
+    return [
+        {
+            "feature": str(row.feature),
+            "event_count": int(row.event_count),
+            "unique_users": int(row.unique_users),
+            "pct_of_total_events": round(float(row.event_count) / total_events * 100, 2),
+        }
+        for row in grouped.itertuples(index=False)
+    ]
+
+
+def _platform_counts(df: pd.DataFrame, column: str) -> list[dict]:
+    total = len(df)
+    if total == 0:
+        return []
+    counts = df[column].fillna("Unknown").value_counts()
+    return [
+        {"label": str(label), "count": int(count), "pct": round(float(count) / total * 100, 2)}
+        for label, count in counts.items()
+    ]
+
+
+def compute_platform_breakdown(df: pd.DataFrame) -> dict:
+    """
+    Device/browser/OS breakdown plus hour-of-day usage, per PRD 4.4. All 24
+    hours are always returned (zero-filled) so the frontend can render a
+    complete axis rather than gaps for hours with no events.
+    """
+    hour_counts = df["timestamp"].dt.hour.value_counts() if len(df) else {}
+    by_hour = [
+        {"hour": h, "event_count": int(hour_counts.get(h, 0))}
+        for h in range(24)
+    ]
+
+    return {
+        "by_device": _platform_counts(df, "device_type"),
+        "by_browser": _platform_counts(df, "browser"),
+        "by_os": _platform_counts(df, "os"),
+        "by_hour": by_hour,
+    }
