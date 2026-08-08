@@ -19,6 +19,7 @@ data/*.csv
 frontend/node_modules/
 frontend/dist/
 frontend/build/
+frontend/.env
 
 # --- OS / editor ---
 .DS_Store
